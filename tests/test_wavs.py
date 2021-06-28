@@ -1,6 +1,5 @@
-from py import test
 import pytest
-import sys
+import os
 
 #sys.path.append("../../settings.py")
 
@@ -22,6 +21,13 @@ testdata = [(f, 30, 45) for f in files]
 #    testdata = [(f, 30, 45) for f in files]
 #    return testdata
 
+@pytest.mark.parametrize("file", files)
+def test_not_file_size_is_zero(file):
+    assert os.path.getsize(file) > 0
+
+@pytest.mark.parametrize("file", files)
+def test_file_ends_with_wav(file):
+    assert file.split('.')[-1] == 'wav'
 
 @pytest.mark.parametrize("file,frame,threshold", testdata)
 def test_compare_energy_value_with_threshold(file, frame, threshold):
