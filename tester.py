@@ -4,7 +4,7 @@ import sys
 import shlex
 import subprocess
 
-#import Krisp.settings
+import settings as setting
 
 class LoadSettings:
     pass
@@ -49,6 +49,10 @@ def parse_args(argv):
                         help="Show available tests")
     parser.add_argument('-log', dest='log', 
                         help="Keep pytest output into that log file")
+    parser.add_argument('-filter', dest='filter', nargs='+', 
+                        help="Running tests by defined patterns")
+    parser.add_argument("-files", dest="files", nargs='*',default=setting.files,
+                     help="files paths or files path paterns")
     # add -l option to show available list of test
     args = parser.parse_args(argv)
     return args
@@ -56,12 +60,12 @@ def parse_args(argv):
 
 if __name__ == "__main__":
     ARGS = parse_args(sys.argv[1:])
-    pytest_options = ['--tb=no']
+    pytest_options = [f"--files {' '.join(ARGS.files)}"]
     if ARGS.list_tests is not False:
         pytest_options.append("--collect-only")
-    else:
-        pytest_options.append('--durations=0 -vv')
     if ARGS.np is not None:
         pytest_options.extend(["-n", str(ARGS.np)])
+    if ARGS.filter is not None:
+        pytest_options.extend(ARGS.filter)
     RT = RunTests(pytest_options, log=ARGS.log)
-    RT.run()
+    sys.exit(RT.run())

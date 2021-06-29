@@ -21,6 +21,26 @@ testdata = [(f, 30, 45) for f in files]
 #    testdata = [(f, 30, 45) for f in files]
 #    return testdata
 
+def test():
+    file_ = os.path.join("sample_data", "data", "English.wav")
+    po = tt.ProcessAudio(file_)
+    po.read()
+    assert po.get_nframes() == 1549309
+    assert po.get_sample_rate() == 48000
+    po.resample(40000)
+
+
+def test(file_):
+    po = ProcessAudio(file_)
+    po.read()
+    print(po.get_nframes())
+    print(po.get_sample_rate())
+    po.resample(40000)
+    #breakpoint()
+
+file_ = os.path.join("./tests", "sample_data", "data", "English.wav")
+test(file_)
+
 @pytest.mark.parametrize("file", files)
 def test_not_file_size_is_zero(file):
     assert os.path.getsize(file) > 0
