@@ -2,3 +2,4 @@ pytest==6.2.4
 ffmpeg-python
 pytest-xdist
 pytest-lazy-fixture
+pytest-html

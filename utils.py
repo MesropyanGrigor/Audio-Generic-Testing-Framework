@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import ffmpeg
 import wave
 import scipy.signal as sps
-import dask
+import shlex
 
 class ProcessAudio:
     """ 
@@ -21,7 +21,7 @@ class ProcessAudio:
     
     Examples
     ========
-    >>> audio = ProcessAudio("file.wav", 2048)
+    >>> audio = ProcessAudio("file.wav")
     >>> audio.read()
     >>> 
     """
@@ -37,7 +37,25 @@ class ProcessAudio:
         self.length = None
         self._is_wav_format = None
         self.in_rate = 44100.0
+        self.frame_size_in_ms = 0.01
         self.nptype = None
+        self.out_file = 'm_' + os.path.basename(self.file)
+
+    @staticmethod
+    def chunks(l, k):
+        """
+        Yields chunks of size k from a given list.
+        """
+        for i in range(0, len(l), k):
+            yield l[i:i+k]
+
+    def compute_energy(self):
+        energy = []
+        for chunk in self.chunks(self.data.tolist(), 
+                                int(self.in_rate * self.frame_size_in_ms)):
+#            breakpoint()
+            energy.append(self.energy(chunk))
+        return sum(energy)
 
     def length(self):
         if self.data is not None:
@@ -68,7 +86,15 @@ class ProcessAudio:
             self._is_wav_format = False
 
     def resample(self, rate):
-        self.out_stream = wave.open(f"m_{os.path.basename(self.file)}", 'w')
+        """
+        Resampling inputed wav file by given sample rate
+
+        parameters
+        ----------
+            rate : int
+                sample rate
+        """
+        self.out_stream = wave.open(self.out_file, 'w')
         self.out_stream.setframerate(rate)
         self.out_stream.setnchannels(self.stream.getnchannels())
         self.out_stream.setsampwidth (self.stream.getsampwidth())
@@ -83,6 +109,11 @@ class ProcessAudio:
         audio_out = audio_out.astype(self.nptype)
         self.out_stream.writeframes(audio_out.copy(order='C'))
         self.out_stream.close()
+        print(f"Created {self.out_file} file")
+
+    @staticmethod
+    def energy(frames):
+        return sum([abs(x)**2 for x in frames])/len(frames)
 
     def compute_short_term_energy(self):
         """Counting Short-term energy:
@@ -91,7 +122,8 @@ class ProcessAudio:
         if self.data is not None:
             # array_split splits an array into multiple sub-arrays of equal or near-equal size.
             self.frames = np.array_split(self.data, self.get_nframes())
-            return sum([abs(float(sum(x)))**2 for x in self.frames])/len(self.frames)
+            #return sum([abs(float(sum(x)))**2 for x in self.frames])/len(self.frames)
+            return self.energy(self.frames)
         else:
             print("Error: First of all need to call 'read' method!")
 
@@ -115,10 +147,17 @@ class ProcessAudio:
         return self.stream.getnframes()
 
     @staticmethod
-    def change_sample_rate(in_file, out_file, rate):
+    def change_sample_rate_by_ffmprg(in_file, out_file, rate):
         executable = os.path.join('ffmpeg', 'bin', 'ffmpeg.exe')
+        out_file_to_in = f'{out_file}_{rate}.wav'
         if os.path.isfile(executable):
-            os.system(f"{executable} -i {in_file} -ar {rate} -o {out_file}_{rate}.wav")
+            popen = subprocess.peopen(
+                shlex.split(f"{executable} -i {in_file} -ar {rate} -o {out_file_to_int}"),
+                stdout = -1, stderr=-1
+                )
+            out, err = popen.communicate()
+            if popen.returncode:
+                self.in_file = out_file_to_in
         else:
             print(f"Error: {executable} is not found!")
 
@@ -129,6 +168,7 @@ def test(file_):
     print(po.get_nframes())
     print(po.get_sample_rate())
     po.resample(60000)
+    print(po.compute_energy())
     print(po.compute_short_term_energy())
     #breakpoint()
 

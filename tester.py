@@ -60,12 +60,13 @@ def parse_args(argv):
 
 if __name__ == "__main__":
     ARGS = parse_args(sys.argv[1:])
-    pytest_options = [f"--files {' '.join(ARGS.files)}"]
+    #pytest_options = [f"--files {' '.join(ARGS.files)}"]
+    pytest_options = []
     if ARGS.list_tests is not False:
         pytest_options.append("--collect-only")
     if ARGS.np is not None:
         pytest_options.extend(["-n", str(ARGS.np)])
     if ARGS.filter is not None:
-        pytest_options.extend(ARGS.filter)
+        pytest_options.append(f'-k  "%s"' % ' '.join(ARGS.filter))
     RT = RunTests(pytest_options, log=ARGS.log)
     sys.exit(RT.run())
