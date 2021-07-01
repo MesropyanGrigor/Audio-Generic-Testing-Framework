@@ -1,7 +1,10 @@
 Generic Testing Framework
 -------------------------
 
-Framework should allow to run separate and collection tests. TODO
+Framework should allow to run separate and collection tests. 
+For that purpose I used pytest framework as it has many features already
+and has many plugins which can be adopted.(ex. pytest-html, to generate html report)
+TODO
 
 Requirements
 ------------
@@ -17,11 +20,28 @@ Inputs
 
 Usage
 -----
+usage: tester.py [-h] [-config CONFIG] [-np NP] [-l] [-log LOG] [-filter FILTER [FILTER ...]] [-files [FILES [FILES ...]]]
 
+optional arguments:
+  -h, --help            show this help message and exit
+  -config CONFIG        Config file path
+  -np NP                Running in parallel mode, using provided value as number of cores
+  -l                    Show available tests
+  -log LOG              Keep pytest output into that log file
+  -filter FILTER [FILTER ...]
+                        Running tests by defined patterns
+  -files [FILES [FILES ...]]
+                        files paths or files path paterns
+
+
+Examples
+--------
+* python tester.py -l # will show all available tests
+
+*  python .\tester.py -n 8 -filter "test_up_or_down_sampling" # will run only tests which names have "test_up_or_down_sampling" word in 8 processes
 
 Constrains
 ----------
-
 * Have ability to run tests in parallel 
 
 Tests
