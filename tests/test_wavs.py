@@ -8,20 +8,6 @@ import Krisp.utils as tt
 ALL_FILES = files
 TESTDATA = [(f, 30, 45) for f in files]
 
-#def pytest_generate_tests(metafunc, all_files):
-#    if "file" in metafunc.funcargnames:
-#        for file in all_files:
-#            metafunc.addcall(funcargs=dict(file=file))
-
-#def test():
-#    file_ = os.path.join("sample_data", "data", "English.wav")
-#    po = tt.ProcessAudio(file_)
-#    po.read()
-#    assert po.get_nframes() == 1549309
-#    assert po.get_sample_rate() == 48000
-#    po.resample(40000)
-#    assert os.path.isfile(po.out_file)
-
 @pytest.fixture()
 def threshold():
     return THRESHOLD
@@ -46,8 +32,6 @@ def test_rate_is_44100(file):
     wav_obj.read()
     assert wav_obj.rate == 44100, f"Rate is not 44100"
 
-#def test_compare_energy_value_with_threshold(file, threshold):
-
 @pytest.mark.parametrize("file", ALL_FILES)
 def test_energy_with_threshold(file, threshold):
     wav_obj = tt.ProcessAudio(file)
@@ -55,13 +39,13 @@ def test_energy_with_threshold(file, threshold):
     assert wav_obj.compute_energy() > threshold, "Error: Lower than expected"
 
 @pytest.mark.parametrize("file", ALL_FILES)
-def test_energy_with_0(file):
+def test_is_energy_0(file):
     wav_obj = tt.ProcessAudio(file)
     wav_obj.read()
     assert wav_obj.compute_energy() > 0, "Error: Energy should not be lower than 0"
 
 @pytest.mark.parametrize("file,threshold,sign", RESAMPLE_DATA)
-def test_up_or_down_sampling(file, threshold, sign):
+def test_energy_after_up_or_down_sampling(file, threshold, sign):
     # threshold is unsued variable keeped it to use 
     # RESAMPLE_DATA
     wav_obj = tt.ProcessAudio(file)
@@ -72,10 +56,9 @@ def test_up_or_down_sampling(file, threshold, sign):
     energy_after_resampling = wav_obj.compute_energy()
     sub = energy - energy_after_resampling
     assert abs(sub) > 0  and abs(sub) < 100 
-    #test_compare_energy_value_with_threshold(wav_obj.out_file, threshold)
 
 @pytest.mark.parametrize("file,threshold,sign", RESAMPLE_DATA)
-def test_up_or_down_sampling_by_ffmpeg(file, threshold, sign):
+def test_energy_after_up_or_down_sampling_by_ffmpeg(file, threshold, sign):
     wav_obj = tt.ProcessAudio(file)
     wav_obj.read()
     wav_obj.resampling_by_ffmpeg(eval(f"{wav_obj.rate} {sign} 10000"))
@@ -83,11 +66,13 @@ def test_up_or_down_sampling_by_ffmpeg(file, threshold, sign):
     assert wav_obj.compute_energy() > threshold, "Error: Lower than expected"
 
 
-## check is the file wave format or not
-
-
 # create tests1/tests_wav2.py tests1/tests_wav1.py
 # create tests2/test_wav1.py
 # create help file
 # represent pytest first of all 
 # create html report file for tests
+
+#def pytest_generate_tests(metafunc, all_files):
+#    if "file" in metafunc.funcargnames:
+#        for file in all_files:
+#            metafunc.addcall(funcargs=dict(file=file))
