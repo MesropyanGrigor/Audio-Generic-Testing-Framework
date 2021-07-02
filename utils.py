@@ -1,4 +1,5 @@
 import os
+import sys
 import wave
 import scipy.signal as sps
 import shlex
@@ -49,9 +50,6 @@ class ProcessAudio:
         self.nptype = None
         self.out_file = 'm_' + os.path.basename(self.file)
         self.tmp = os.path.abspath(tmp)
-        if os.path.exists(self.tmp):
-            shutil.rmtree(self.tmp, ignore_errors=True)
-        os.mkdir(self.tmp)
 
     @staticmethod
     def chunks(data, size):
@@ -87,16 +85,18 @@ class ProcessAudio:
         if not os.path.isfile(self.file):
             raise FileNotFoundError(f"Error: Audio file is not found: {self.file}")
         try:
-           self.stream = soundfile.SoundFile(self.file)
-           self.stream._prepare_read(0, None, -1)
-           # if self.stream.getsampwidth() == 1:
-           #     self.nptype = np.uint8
-           # elif self.stream.getsampwidth() == 2:
-           #     self.nptype = np.uint16
-           self.data = self.stream.read()
-           self.rate = self.stream.samplerate
-           self._is_wav_format = True
-           self.set_length()
+            if self.stream is not None:
+                self.stream.close()
+            self.stream = soundfile.SoundFile(self.file)
+            self.stream._prepare_read(0, None, -1)
+            # if self.stream.getsampwidth() == 1:
+            #     self.nptype = np.uint8
+            # elif self.stream.getsampwidth() == 2:
+            #     self.nptype = np.uint16
+            self.data = self.stream.read()
+            self.rate = self.stream.samplerate
+            self._is_wav_format = True
+            self.set_length()
         except ValueError as value_error:
             print(f"Error: Can not read {self.file}"
                   "(It is not uncompressed wav format)")
@@ -142,9 +142,11 @@ class ProcessAudio:
         out_file = os.path.join(self.tmp, self.out_file)
         with soundfile.SoundFile(out_file, 'w', rate, 1, 'PCM_24') as file_:
             file_.write(new_data)
-        if os.path.isfile(self.out_file):
+        if os.path.isfile(out_file):
             self.file = out_file
             print(f"Created {os.path.abspath(out_file)} file")
+        else:
+            print(f"Error: {os.path.abspath(out_file)} file is not created")
 
     @staticmethod
     def energy(frames):
@@ -204,7 +206,7 @@ class ProcessAudio:
             print(f"Regenerated {out_file_to_in} by ffmpeg")
             self.file = out_file
 
-    def resampling_by_ffmperg(self, rate, file_=sys.stdout):
+    def resampling_by_ffmpeg(self, rate, file_=sys.stdout):
         """Changing sample rate by ffmpeg tool"""
         out_file  = f'resapled_{os.path.basename(self.file)}_{rate}.wav'
         out_file = os.path.join(self.tmp, out_file)

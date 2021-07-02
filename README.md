@@ -1,10 +1,10 @@
 Generic Testing Framework
 -------------------------
-
+####
 Framework should allow to run separate and collection tests. 
 For that purpose I used pytest framework as it has many features already
 and has many plugins which can be adopted.(ex. pytest-html, to generate html report)
-TODO
+####
 
 Requirements
 ------------
@@ -39,6 +39,8 @@ Examples
     * python tester.py -l # will show all available tests
 
     * python .\tester.py -n 8 -filter "test_up_or_down_sampling" # will run only tests which names have "test_up_or_down_sampling" word in 8 processes
+
+    * python .\tester.py -n 8 # will run available tests
 
 Constrains
 ----------

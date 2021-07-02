@@ -6,8 +6,10 @@ import argparse
 import sys
 import shlex
 import subprocess
+import shutil
+import os
 
-import settings as setting
+import tests.audio.settings as setting
 
 class LoadSettings:
     pass
@@ -27,6 +29,15 @@ class RunTests:
     def __init__(self, pytest_options, log=None):
         self.cmd = f"python -m pytest {' '.join(pytest_options)}"
         self.log=log
+        TMP = 'tmp_1'
+        if os.path.isdir(TMP):
+            if len(os.listdir(TMP)) != 0:
+                shutil.rmtree(TMP, ignore_errors=True)
+        else:
+            os.mkdir(TMP)
+
+    def __del__(self):
+        pass
 
     def run(self):
         print(f"Running pytest command: {self.cmd}")
@@ -55,7 +66,7 @@ def parse_args(argv):
                         help="Keep pytest output into log file")
     parser.add_argument('-filter', dest='filter', nargs='+', 
                         help="Running tests by defined patterns")
-    parser.add_argument("-files", dest="files", nargs='*', default=setting.files,
+    parser.add_argument("-files", dest="files", nargs='*', default=setting.FILES,
                         help="files paths or files path paterns")
     args = parser.parse_args(argv)
     return args
