@@ -44,19 +44,19 @@ def test_is_energy_0(file):
     wav_obj.read()
     assert wav_obj.compute_energy() > 0, "Error: Energy should not be lower or equal to 0"
 
-@pytest.mark.parametrize("file,threshold,sign", RESAMPLE_DATA)
-def test_energy_after_up_or_down_sampling(file, threshold, sign):
-    # threshold is unsued variable keeped it to use 
-    # RESAMPLE_DATA
-    wav_obj = ProcessAudio(file)
-    wav_obj.read()
-    energy = wav_obj.compute_energy()
-    wav_obj.resampling(eval(f"{wav_obj.rate} {sign} {wav_obj.rate//2}"))
-    wav_obj.read()
-    energy_after_resampling = wav_obj.compute_energy()
-    sub = energy - energy_after_resampling
-    assert abs(sub) >= 0  and abs(sub) < 10000 
-    del wav_obj
+#@pytest.mark.parametrize("file,threshold,sign", RESAMPLE_DATA)
+#def test_energy_after_up_or_down_sampling(file, threshold, sign):
+#    # threshold is unsued variable keeped it to use 
+#    # RESAMPLE_DATA
+#    wav_obj = ProcessAudio(file)
+#    wav_obj.read()
+#    energy = wav_obj.compute_energy()
+#    wav_obj.resampling(eval(f"{wav_obj.rate} {sign} {wav_obj.rate//2}"))
+#    wav_obj.read()
+#    energy_after_resampling = wav_obj.compute_energy()
+#    sub = energy - energy_after_resampling
+#    assert abs(sub) >= 0  and abs(sub) < 10000 
+#    del wav_obj
 
 @pytest.mark.parametrize("file,threshold,sign", RESAMPLE_DATA)
 def test_energy_after_up_or_down_sampling_by_ffmpeg(file, threshold, sign):

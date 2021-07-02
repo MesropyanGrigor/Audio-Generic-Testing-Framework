@@ -1,3 +1,6 @@
 pytest==6.2.4
 pytest-html
 soundfile
+scipy
+numpy
+matplotlib
