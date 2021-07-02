@@ -4,6 +4,9 @@ Generic Testing Framework
 Framework should allow to run separate and collection tests. 
 For that purpose I used pytest framework as it has many features already
 and has many plugins which can be adopted.(ex. pytest-html, to generate html report)
+
+
+There are 368 tests! 
 ####
 
 Requirements
