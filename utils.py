@@ -1,17 +1,20 @@
-
-import scipy.io.wavfile
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 import wave
 import scipy.signal as sps
 import shlex
 import subprocess
 import soundfile
+import shutil
+import numpy as np
+import matplotlib.pyplot as plt
 
 class ProcessAudio:
     """ 
-    A ProcessAudio class to parse or process an uncompressed wav format files
+    A ProcessAudio class parse or process an uncompressed wav format files
+
+    For reading audio files used soundfile module as it is working better,
+    It can parse 64RF format audio file, which for example others could not
+    (wave, scipy.io.wavefile).
 
     Parameters
     ==========
@@ -24,14 +27,19 @@ class ProcessAudio:
     ========
     >>> audio = ProcessAudio("file.wav")
     >>> audio.read()
-    >>> 
+    >>> audio.compute_energy()
+    >>> audio.get_sample_rate())
+    >>> audio.resampling(100000)
     """
+
     executable = os.path.abspath(os.path.join('.', 'ffmpeg', 'bin', 'ffmpeg.exe'))
 
-    def __init__(self, path):
-        self.data = np.array([])
-        self._is_wav_format = False
+    def __init__(self, path, tmp='tmp_1'):
         self.file = path
+        if not os.path.isfile(self.executable):
+            raise OSError(f"Error: {executable} is not found!")
+        self.data = np.array([]) # empty array
+        self._is_wav_format = False
         self.rate = -1
         self.stream = None 
         self.frame = None 
@@ -40,12 +48,15 @@ class ProcessAudio:
         self.frame_size_in_ms = 0.01
         self.nptype = None
         self.out_file = 'm_' + os.path.basename(self.file)
-        self.tmp = 'tmp_1'
+        self.tmp = os.path.abspath(tmp)
+        if os.path.exists(self.tmp):
+            shutil.rmtree(self.tmp, ignore_errors=True)
+        os.mkdir(self.tmp)
 
     @staticmethod
     def chunks(data, size):
         """
-        Yields chunks of size k from a given list.
+        Yields chunks of size from a given data list.
         """
         for ind in range(0, len(data), size):
             yield data[ind:ind+size]
@@ -58,6 +69,7 @@ class ProcessAudio:
         return sum(energy)
 
     def set_length(self):
+        """Setting length attribute"""
         if self.data is not None:
             self.length = self.data.shape[0]//self.rate
             print(f"length = {self.length}s")
@@ -73,7 +85,7 @@ class ProcessAudio:
         'soundfile' module.
         """
         if not os.path.isfile(self.file):
-            raise OSError(f"Error: Audio file is not found: {self.file}")
+            raise FileNotFoundError(f"Error: Audio file is not found: {self.file}")
         try:
            self.stream = soundfile.SoundFile(self.file)
            self.stream._prepare_read(0, None, -1)
@@ -89,34 +101,36 @@ class ProcessAudio:
             print(f"Error: Can not read {self.file}"
                   "(It is not uncompressed wav format)")
 
-    def resample(self, rate):
-        """
-        Resampling inputed wav file by given sample rate
+    #def resample(self, rate):
+    #    """
+    #    Resampling inputed wav file by given sample rate
 
-        parameters
-        ----------
-            rate : int
-                sample rate
-        """
-        #self.out_stream = wave.open(self.out_file, 'w')
-        #self.out_stream.setframerate(rate)
-        #self.out_stream.setnchannels(self.stream.channels)
-        #self.out_stream.setsampwidth (self.stream.getsampwidth())
-        #self.out_stream.setnframes(1)
-        #audio = self.stream.readframes(self.stream.getnframes())
-        #nroutsamples = round(len(audio) * rate/self.get_sample_rate())
-        #print("Nr output samples: %d" %  nroutsamples)
-        ##audio_out = sps.resample(np.fromstring(audio, self.nptype), nroutsamples)
-        #audio_formatter = np.fromstring(audio, np.uint16)
-        #audio_out = sps.resample(audio_formatter, len(audio_formatter))
-        #audio_out = audio_out.astype(np.uint16)
-        #self.out_stream.writeframes(audio_out.copy(order='C'))
-        #self.out_stream.close()
+    #    parameters
+    #    ----------
+    #        rate : int
+    #            sample rate
+    #    """
+    #    self.out_stream = wave.open(self.out_file, 'w')
+    #    self.out_stream.setframerate(rate)
+    #    self.out_stream.setnchannels(self.stream.channels)
+    #    self.out_stream.setsampwidth (self.stream.getsampwidth())
+    #    self.out_stream.setnframes(1)
+    #    audio = self.stream.readframes(self.stream.getnframes())
+    #    nroutsamples = round(len(audio) * rate/self.get_sample_rate())
+    #    print("Nr output samples: %d" %  nroutsamples)
+    #    #audio_out = sps.resample(np.fromstring(audio, self.nptype), nroutsamples)
+    #    audio_formatter = np.fromstring(audio, np.uint16)
+    #    audio_out = sps.resample(audio_formatter, len(audio_formatter))
+    #    audio_out = audio_out.astype(np.uint16)
+    #    self.out_stream.writeframes(audio_out.copy(order='C'))
+    #    self.out_stream.close()
 
 
     def resampling(self, rate):
         """
         Resampling inputed wav file by given sample rate
+        
+        Using scipy.signal.resaple function
 
         parameters
         ----------
@@ -125,13 +139,12 @@ class ProcessAudio:
         """
         n_of_samples = round(len(self.data) * rate/self.rate)
         new_data = sps.resample(self.data, n_of_samples)
-        out_file_to_in = f"{self.tmp}\\{self.out_file}"
-        with soundfile.SoundFile(out_file_to_in, 'w', rate, 1, 'PCM_24') as file_:
+        out_file = os.path.join(self.tmp, self.out_file)
+        with soundfile.SoundFile(out_file, 'w', rate, 1, 'PCM_24') as file_:
             file_.write(new_data)
-        print(f"Created {self.out_file} file")
         if os.path.isfile(self.out_file):
-            self.file = out_file_to_in
-            print(f"Created {os.path.abspath(out_file_to_in)}")
+            self.file = out_file
+            print(f"Created {os.path.abspath(out_file)} file")
 
     @staticmethod
     def energy(frames):
@@ -171,119 +184,36 @@ class ProcessAudio:
         print(f"Running command: {command}")
         popen = subprocess.Popen(command,
             stdout = -1, stderr=-1, stdin=-1, shell=True, encoding='utf-8',
-            #cwd='tmp_1'
+            #cwd=self.tmp
             )
         out, err = popen.communicate()
         return out, err, popen.returncode
 
     def rw_by_ffmprg(self, out_file):
         """Read and write wav file via ffmpeg tool"""
-        out_file_to_in = os.path.join(self.tmp, out_file)
-        if os.path.isfile(self.executable):
-            print(f"{self.executable} -i {self.file} -o {out_file_to_in}")
-            if os.path.isfile(out_file_to_in):
-                os.remove(out_file_to_in)
-            cmd = f"{self.executable} -i {os.path.abspath(self.file)} -f wav {out_file_to_in}"
-            out, err, returncode = self.run_cmd(cmd)
-            with open(f'{os.path.basename(self.file)}_ffmpeg', 'w') as f:
-                f.write(out)
-                f.write(err)
-            if returncode == 0 and os.path.isfile(out_file_to_in):
-                print(f"Regenerated {out_file_to_in} by ffmpeg")
-                self.in_file = out_file_to_in
-        else:
-            print(f"Error: {self.executable} is not found!")
+        out_file = os.path.join(self.tmp, out_file)
+        print(f"{self.executable} -i {self.file} -o {out_file}")
+        if os.path.isfile(out_file):
+            os.remove(out_file)
+        cmd = f"{self.executable} -i {os.path.abspath(self.file)} -f wav {out_file}"
+        out, err, returncode = self.run_cmd(cmd)
+        #with open(f'{os.path.basename(self.file)}_ffmpeg', 'w') as f:
+        #    f.write(out)
+        #    f.write(err)
+        if returncode == 0 and os.path.isfile(out_file):
+            print(f"Regenerated {out_file_to_in} by ffmpeg")
+            self.file = out_file
 
-    #def change_sample_rate_by_ffmprg(self, rate):
-    def resampling_by_ffmperg(self, rate):
+    def resampling_by_ffmperg(self, rate, file_=sys.stdout):
         """Changing sample rate by ffmpeg tool"""
-        out_file_to_in = f'resampled_{os.path.basename(self.file)}_{rate}.wav'
-        if os.path.isfile(self.executable):
-            if os.path.isfile(out_file_to_in):
-                os.remove(out_file_to_in)
-            cmd = f"{self.executable} -i {self.file} -ar {rate} {out_file_to_in}"
-            out, err, returncode = self.run_cmd(cmd)
-            if returncode == 0:
-                self.file = out_file_to_in
-                print(f"Created {os.path.abspath(out_file_to_in)}")
-            else:
-                print(out, err)
+        out_file  = f'resapled_{os.path.basename(self.file)}_{rate}.wav'
+        out_file = os.path.join(self.tmp, out_file)
+        if os.path.isfile(out_file):
+            os.remove(out_file)
+        cmd = f"{self.executable} -i {self.file} -ar {rate} {out_file}"
+        out, err, returncode = self.run_cmd(cmd)
+        if returncode == 0:
+            self.file = out_file
+            print(f"Created {os.path.abspath(out_file)}")
         else:
-            print(f"Error: {executable} is not found!")
-
-def test(file_):
-    po = ProcessAudio(file_)
-    try:
-        po.read()
-        print(po.get_nframes())
-        print(po.get_sample_rate())
-        po.resample(60000)
-        print(po.compute_energy())
-        print(po.compute_short_term_energy())
-    except BaseException as b_e:
-        print(b_e)
-    po.rw_by_ffmprg('new_'+os.path.basename(po.file))
-    po.read()
-    print(po.rate)
-
-def test1(file_):
-    po = ProcessAudio(file_)
-    #po.rw_by_ffmprg('new_'+os.path.basename(po.file))
-    po.read()
-    print(po.get_nframes())
-    print(po.get_sample_rate())
-    po.resampling(60000)
-    print(po.compute_energy())
-    print(po.compute_short_term_energy())
-    print(po.rate)
-    #po.plot()
-
-def test2(file_):
-    po = ProcessAudio(file_)
-    #po.rw_by_ffmprg('new_'+os.path.basename(po.file))
-    po.read()
-    print(po.get_nframes())
-    print(po.get_sample_rate())
-    po.change_sample_rate_by_ffmprg(100000)
-    #po.resampling(100000)
-    po.file = po.out_file
-    po.read()
-    print(po.get_nframes())
-    print(po.get_sample_rate())
-    print(po.rate)
-    #po.plot()
-
-def test3(file_):
-    po = ProcessAudio(file_)
-    po.read()
-    print(po.compute_energy())
-    po.change_sample_rate_by_ffmprg(100000)
-    po.read()
-    print(po.compute_energy())
-
-file_ = os.path.join("./tests", "sample_data", "data", "English.wav")
-#test3(file_)
-#test("m_English.wav")
-file1_ = "tests\\sample_data\\data\\nistwav_signed16bPCM_8k_mono.wav"
-#test1(file1_)
-file2 = "tests\\sample_data\\data\\nistwav_signed32bPCM_44.1k_mono.wav"
-file3 = "tests\\sample_data\\voices\\audios\\4.wav"
-#test1(file2)
-#test1(file1_)
-
-
-def test_up_or_down_sampling(file, sign):
-    wav_obj = ProcessAudio(file)
-    wav_obj.read()
-    energy = wav_obj.compute_energy()
-    print(energy)
-    wav_obj.resampling(eval(f"{wav_obj.rate} {sign} 10000"))
-    wav_obj.read()
-    energy_after_resampling = wav_obj.compute_energy()
-    print(energy_after_resampling)
-    breakpoint()
-    sub = energy - energy_after_resampling
-    print(abs(sub) >= 0  and abs(sub) < 1 )
-
-
-#test_up_or_down_sampling(file2, '+')
+            print(out, err, file=file_)

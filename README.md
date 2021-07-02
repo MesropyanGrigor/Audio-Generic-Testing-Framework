@@ -38,7 +38,7 @@ Examples
 --------
     * python tester.py -l # will show all available tests
 
-    *  python .\tester.py -n 8 -filter "test_up_or_down_sampling" # will run only tests which names have "test_up_or_down_sampling" word in 8 processes
+    * python .\tester.py -n 8 -filter "test_up_or_down_sampling" # will run only tests which names have "test_up_or_down_sampling" word in 8 processes
 
 Constrains
 ----------
@@ -65,9 +65,9 @@ Output
 ------
 * Processed audio files in wav format
 * Output test report file with following information
-** Show which test has been run
-** Show status of the execution of the particular test
-** Actual vs Expected output
-** Information about (detailed) log of execution
+    * Show which test has been run
+    * Show status of the execution of the particular test
+    * Actual vs Expected output
+    * Information about (detailed) log of execution
 
 

@@ -1,4 +1,7 @@
-"""Generic testing framework"""
+"""Generic testing framework
+
+Wraper for pytest tool
+"""
 import argparse
 import sys
 import shlex
@@ -39,6 +42,7 @@ class RunTests:
 
 
 def parse_args(argv):
+    """Argument Parser"""
     parser = argparse.ArgumentParser()
     parser.add_argument('-config', dest='config',
                         help="Config file path")
@@ -48,12 +52,11 @@ def parse_args(argv):
     parser.add_argument('-l', dest='list_tests', action="store_true", 
                         help="Show available tests")
     parser.add_argument('-log', dest='log', 
-                        help="Keep pytest output into that log file")
+                        help="Keep pytest output into log file")
     parser.add_argument('-filter', dest='filter', nargs='+', 
                         help="Running tests by defined patterns")
-    parser.add_argument("-files", dest="files", nargs='*',default=setting.files,
-                     help="files paths or files path paterns")
-    # add -l option to show available list of test
+    parser.add_argument("-files", dest="files", nargs='*', default=setting.files,
+                        help="files paths or files path paterns")
     args = parser.parse_args(argv)
     return args
 
@@ -67,6 +70,6 @@ if __name__ == "__main__":
     if ARGS.np is not None:
         pytest_options.extend(["-n", str(ARGS.np)])
     if ARGS.filter is not None:
-        pytest_options.append(f'-k  "%s"' % ' '.join(ARGS.filter))
+        pytest_options.append('-k  "%s"' % ' '.join(ARGS.filter))
     RT = RunTests(pytest_options, log=ARGS.log)
     sys.exit(RT.run())
