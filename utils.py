@@ -21,9 +21,9 @@ class ProcessAudio:
     ==========
         path: str
             audio file path
-        frame: int
-            audio file frame size
-    
+        tmp: str
+            folder name where should be generated resampled files
+
     Examples
     ========
     >>> audio = ProcessAudio("file.wav")
