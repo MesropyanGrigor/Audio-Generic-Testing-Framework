@@ -63,7 +63,7 @@ Available the following tests:
     * test_rate_is_44100
     * test_energy_with_threshold
     * test_is_energy_0
-    * test_energy_after_up_or_down_sampling
+    * test_energy_after_up_or_down_sampling (This one is not stable in windows 10 so it was disabled)
     * test_energy_after_up_or_down_sampling_by_ffmpeg
 
 Output
@@ -74,5 +74,16 @@ Output
     * Show status of the execution of the particular test
     * Actual vs Expected output
     * Information about (detailed) log of execution
+
+
+Installing and using package
+----------------------------
+
+1. **git clone https://github.com/MesropyanGrigor/Audio-Generic-Testing-Framework**
+2. Install requirements packages:
+    **python -m pip install -r** requirements.txt
+3. Rename cloned folder to **Krisp**, as package is called Krisp
+4. Run **python tester.py -h** command to see the usage
+
 
 
